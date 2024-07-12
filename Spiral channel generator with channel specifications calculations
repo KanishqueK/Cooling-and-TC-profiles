@@ -1,0 +1,113 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import pandas as pd
+import math
+
+contour = pd.read_csv('Raman2_ver4_contour.csv')
+z_tc = contour['x'].values  #axial location in mm
+r_tc = contour['r'].values  #radii in mm
+
+#plt.plot(z_tc, r_tc)
+#plt.show()
+
+helix_angle = 45    #in degrees
+tin = 0.5 #inner wall thickness in mm
+theta  = 0 #starting angle of spiral w.r.t x-axis/y-axis any one 
+x = np.zeros(len(z_tc))
+y = np.zeros(len(z_tc))
+
+x1 = np.zeros(len(z_tc))
+y1 = np.zeros(len(z_tc))
+
+null = np.zeros(len(z_tc))
+
+x[len(z_tc) - 1] = r_tc[len(r_tc)-1] + tin
+y[len(z_tc) - 1] = 0
+
+Dt = 35.43  #throat diameter in mm
+
+rib_width = 0.8 #in mm
+rib_width_projected = rib_width/math.cos(helix_angle*np.pi/180)
+print('for use in RPA ', rib_width, ' mm rib width should be input as ', rib_width_projected, 'mm')
+
+angle_rib_exit = rib_width_projected/(r_tc[len(r_tc) - 1] + tin)  #angle suspended by rib at exit in radians
+#print(angle_rib_exit)
+
+x1[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin)*(1-math.cos(angle_rib_exit))
+y1[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin)*(math.sin(angle_rib_exit))
+
+x1[len(z_tc) - 1] = -1*(r_tc[len(r_tc)-1] + tin)
+y1[len(z_tc) - 1] = 0
+
+for i in range(len(z_tc)-1):
+    del_L = (z_tc[len(z_tc) -1 -i] - z_tc[len(z_tc) - 2 - i] )*math.tan(helix_angle*np.pi/180) #circumferential distance covered by spiral at one station
+    del_theta = del_L/(r_tc[len(r_tc) -1 -i] + tin) #angle in radians
+    theta0 = theta  #initial angle at downstream end the station
+    theta = theta0 + del_theta   #final angle at upstream end of the station
+    del_x = (r_tc[len(r_tc) - 1 - i] + tin)*(math.cos(theta) - math.cos(theta0))    #displacement in x direction across length dz
+    del_y = (r_tc[len(r_tc) - 1 - i] + tin)*(math.sin(theta) - math.sin(theta0))    #displacement in y direction across length dz
+    x[len(z_tc) -2 -i] = (x[len(z_tc) -1 -i] + del_x)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
+    y[len(z_tc) -2 -i] = (y[len(z_tc) -1 -i] + del_y)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
+    x1[len(z_tc) -2 -i] = (x1[len(z_tc) -1 -i] - del_x)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
+    y1[len(z_tc) -2 -i] = (y1[len(z_tc) -1 -i] - del_y)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
+    #x1[len(z_tc) -2 -i] =  
+    #y1[len(z_tc) -2 -i] = 
+    
+
+
+print(len(z_tc,), len(r_tc), len(x), len(y))
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+# Plot the 3D surface
+ax.plot(z_tc, x, y)
+ax.plot(z_tc, x1, y1)
+ax.plot(z_tc, null, r_tc, color='black')
+ax.plot(z_tc, null, -r_tc, color='black')
+ax.plot(z_tc, r_tc, null, color='black')
+ax.plot(z_tc, -r_tc, null, color='black')
+#plt.plot(z_tc, r_tc)
+#plt.plot(z_tc, -r_tc)
+plt.show()
+
+######################################################spiral channels calculation####################################
+
+aspect_Ratio = np.arange(1, 6, 0.2) #aspect ratio of channels
+Nch = np.arange(10, 105, 5) #number of channels
+AR_exit = np.array([8, 11, 13])  #exit area ratio
+
+b = rib_width_projected
+T_innerWall = tin
+Conv_AR = 5.1
+
+results = []
+
+for i in range(len(Nch)):
+    for j in range(len(AR_exit)):
+        angle_rib_channel_universal = (360/Nch[i])*(np.pi/180) ####all calculations in radian only
+        angle_rib_throat = b/(Dt/2 + T_innerWall)   #value in radians
+        angle_rib_exit = b/(((Dt*np.sqrt(AR_exit[j])/2) + T_innerWall))     #value in radians
+        angle_rib_chamber = b/(((Dt*np.sqrt(Conv_AR)/2) + T_innerWall))   #value in radians
+        angle_channel_exit = angle_rib_channel_universal - angle_rib_exit
+        angle_channel_throat = angle_rib_channel_universal - angle_rib_throat
+        angle_channel_chamber = angle_rib_channel_universal - angle_rib_chamber
+        channel_width_chamber = angle_channel_chamber*(((Dt*np.sqrt(Conv_AR)/2) + T_innerWall))*math.cos(helix_angle*np.pi/180)
+        channel_width_throat = angle_channel_throat*(Dt/2 + T_innerWall)*math.cos(helix_angle*np.pi/180)
+        channel_width_exit = angle_channel_exit*(((Dt*np.sqrt(AR_exit[j])/2) + T_innerWall))*math.cos(helix_angle*np.pi/180)
+        for m in range(len(aspect_Ratio)):
+                channel_height_throat = (channel_width_throat*aspect_Ratio[m])
+                channel_height_exit = (channel_width_exit*aspect_Ratio[m])
+                channel_height_chamber = (channel_width_chamber*aspect_Ratio[m])
+                if (1<channel_height_throat<7.5):
+                    if (1<channel_height_chamber<9.5):
+                        if (1<channel_height_exit<9.5):
+                            results.append([Nch[i], b, channel_width_throat, channel_height_throat, channel_height_throat/channel_width_throat, channel_width_chamber, channel_height_chamber, channel_height_chamber/channel_width_chamber, channel_width_exit, channel_height_exit, channel_height_exit/channel_width_exit, AR_exit[j]])
+                            angle_rib_throat = angle_rib_exit = angle_rib_chamber = angle_channel_throat = angle_channel_chamber = angle_channel_exit = channel_width_chamber = channel_width_throat = channel_width_exit = channel_height_chamber = channel_height_throat = channel_height_exit = 0
+
+
+
+out = pd.DataFrame(results, columns=['number of channels', 'rib width', 'channel width at throat', 'channel height at throat', 'channel aspect ratio at throat', 'channel width at chamber', 'channel height at chamber', 'channel aspect ratio at chamber', 'channel width at exit', 'channel height at exit', 'channel aspect ratio at exit', 'exit area ratio'])
+                            
+out.to_csv('Raman2_TC-R2_spiralChannels.csv', index=False)
