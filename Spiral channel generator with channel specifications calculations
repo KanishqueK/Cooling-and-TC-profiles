@@ -3,67 +3,228 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 import math
+import openpyxl
 
-contour = pd.read_csv('Raman2_ver4_contour.csv')
+contour = pd.read_csv('Spiral_Channels3_n500_seg2_AM.csv')
 z_tc = contour['x'].values  #axial location in mm
 r_tc = contour['r'].values  #radii in mm
-
+theta_channel = contour['theta_channel'].values #angle suspended by channel
+h_c = contour['hc'].values  #height of channel
+a_c = contour['a'].values   #channel width
+tin = contour['T_adj'].values
 #plt.plot(z_tc, r_tc)
 #plt.show()
+print(h_c)
 
-helix_angle = 45    #in degrees
-tin = 0.5 #inner wall thickness in mm
-theta  = 0 #starting angle of spiral w.r.t x-axis/y-axis any one 
-x = np.zeros(len(z_tc))
-y = np.zeros(len(z_tc))
+helix_angle = 30    #in degrees
+#tin = 2 #inner wall thickness in mm
 
+theta0_X0  = 0 #starting angle of spiral channel generatrix
+#theta0_X0  = 2.4279050295415323 + 0.0280499344  #starting angle of spiral channel generatrix, the first number is end phase angle of seg 2 and value under braces is phase difference between seg1 and seg2
+x0 = np.zeros(len(z_tc))
+y0 = np.zeros(len(z_tc))
+
+theta0_Xc  = theta0_X0 #starting angle of spiral channel centroid
+xc = np.zeros(len(z_tc))
+yc = np.zeros(len(z_tc))
+
+#theta0_X1  = theta_channel[len(z_tc)-1]/2 #starting angle of spiral w.r.t generatrix in rad
+theta0_X1  = theta0_X0 + theta_channel[len(z_tc)-1]/2 #starting angle of spiral w.r.t generatrix in rad for seg1 use only
 x1 = np.zeros(len(z_tc))
 y1 = np.zeros(len(z_tc))
 
+#theta0_X2  = theta_channel[len(z_tc)-1]/2 #starting angle of spiral w.r.t x-axis in rad
+theta0_X2  = theta0_X0 + theta_channel[len(z_tc)-1]/2 #starting angle of spiral w.r.t generatrix in rad for seg1 use only
+x2 = np.zeros(len(z_tc))
+y2 = np.zeros(len(z_tc))
+
+#theta0_X3  = -1*theta_channel[len(z_tc)-1]/2 #starting angle of spiral w.r.t x-axis in rad
+theta0_X3  = theta0_X0 - theta_channel[len(z_tc)-1]/2 #starting angle of spiral w.r.t generatrix in rad for seg1 use only
+x3 = np.zeros(len(z_tc))
+y3 = np.zeros(len(z_tc))
+
+#theta0_X4  = -1*theta_channel[len(z_tc)-1]/2 #starting angle of spiral w.r.t x-axis in rad
+theta0_X4  = theta0_X0 - theta_channel[len(z_tc)-1]/2 #starting angle of spiral w.r.t generatrix in rad for seg1 use only
+x4 = np.zeros(len(z_tc))
+y4 = np.zeros(len(z_tc))
+
+# x1 = np.zeros(len(z_tc))
+# y1 = np.zeros(len(z_tc))
+
 null = np.zeros(len(z_tc))
 
-x[len(z_tc) - 1] = r_tc[len(r_tc)-1] + tin
-y[len(z_tc) - 1] = 0
+#print(np.pi*theta/180)
 
-Dt = 35.43  #throat diameter in mm
+print('radius at exit: ', r_tc[len(r_tc)-1] + tin)
 
-rib_width = 0.8 #in mm
-rib_width_projected = rib_width/math.cos(helix_angle*np.pi/180)
-print('for use in RPA ', rib_width, ' mm rib width should be input as ', rib_width_projected, 'mm')
+x0[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1])*(math.cos(theta0_X0))
+y0[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1])*(math.sin(theta0_X0))
 
-angle_rib_exit = rib_width_projected/(r_tc[len(r_tc) - 1] + tin)  #angle suspended by rib at exit in radians
+x1[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1])*(math.cos(theta0_X1))
+y1[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1])*(math.sin(theta0_X1))
+
+x2[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1] + h_c[len(r_tc)-1])*(math.cos(theta0_X2))
+y2[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1] + h_c[len(r_tc)-1])*(math.sin(theta0_X2))
+
+x3[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1] + h_c[len(r_tc)-1])*(math.cos(theta0_X3))
+y3[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1] + h_c[len(r_tc)-1])*(math.sin(theta0_X3))
+
+x4[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1])*(math.cos(theta0_X4))
+y4[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1])*(math.sin(theta0_X4))
+
+xc[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1] + h_c[len(r_tc)-1]/2)*(math.cos(theta0_X0))
+yc[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin[len(tin)-1] + h_c[len(r_tc)-1]/2)*(math.sin(theta0_X0))
+
+
+
+print('starting x0 and y0 are respectively:', x0[len(z_tc) - 1], y0[len(z_tc) - 1] )
+print('starting xc and yc are respectively:', xc[len(z_tc) - 1], yc[len(z_tc) - 1] )
+print('starting x1 and y1 are respectively:', x1[len(z_tc) - 1], y1[len(z_tc) - 1] )
+print('starting x2 and y2 are respectively:', x2[len(z_tc) - 1], y2[len(z_tc) - 1] )
+print('starting x3 and y3 are respectively:', x3[len(z_tc) - 1], y3[len(z_tc) - 1] )
+print('starting x4 and y4 are respectively:', x4[len(z_tc) - 1], y4[len(z_tc) - 1] )
+# Dt = 35.43  #throat diameter in mm
+
+
+# rib_width = 0.8 #in mm
+# rib_width_projected = rib_width/math.cos(helix_angle*np.pi/180)
+# print('for use in RPA ', rib_width, ' mm rib width should be input as ', rib_width_projected, 'mm')
+
+# angle_rib_exit = rib_width_projected/(r_tc[len(r_tc) - 1] + tin)  #angle suspended by rib at exit in radians
 #print(angle_rib_exit)
 
-x1[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin)*(1-math.cos(angle_rib_exit))
-y1[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin)*(math.sin(angle_rib_exit))
+# x1[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin)*(1-math.cos(angle_rib_exit))
+# y1[len(z_tc) - 1] = (r_tc[len(r_tc)-1] + tin)*(math.sin(angle_rib_exit))
 
-x1[len(z_tc) - 1] = -1*(r_tc[len(r_tc)-1] + tin)
-y1[len(z_tc) - 1] = 0
+# x1[len(z_tc) - 1] = -1*(r_tc[len(r_tc)-1] + tin)
+
+#################################(3)...............(2)#############################
+################################.                 .################################
+###############################.  channel        .#################################
+##############################.                 .##################################
+#############################(4)...............(1)#################################
+
+# y1[len(z_tc) - 1] = 0
+
+#theta0_X1 = math.radians(theta_X1)
+# theta0_X1 = math.radians(theta_X1)
+# theta0_X2 = math.radians(theta_X2)
+# theta0_X4 = math.radians(theta_X4)
+
+results = []    ##########channel spec list
+results.append([z_tc[len(z_tc) -1], r_tc[len(z_tc) -1], x0[len(z_tc) -1], y0[len(z_tc) -1] , x1[len(z_tc) -1], y1[len(z_tc) -1] , x2[len(z_tc) -1], y2[len(z_tc) -1], x4[len(z_tc) -1], y4[len(z_tc) -1], x3[len(z_tc) -1], y3[len(z_tc) -1], xc[len(z_tc) -1], yc[len(z_tc) -1]] )
+
 
 for i in range(len(z_tc)-1):
-    del_L = (z_tc[len(z_tc) -1 -i] - z_tc[len(z_tc) - 2 - i] )*math.tan(helix_angle*np.pi/180) #circumferential distance covered by spiral at one station
-    del_theta = del_L/(r_tc[len(r_tc) -1 -i] + tin) #angle in radians
-    theta0 = theta  #initial angle at downstream end the station
-    theta = theta0 + del_theta   #final angle at upstream end of the station
-    del_x = (r_tc[len(r_tc) - 1 - i] + tin)*(math.cos(theta) - math.cos(theta0))    #displacement in x direction across length dz
-    del_y = (r_tc[len(r_tc) - 1 - i] + tin)*(math.sin(theta) - math.sin(theta0))    #displacement in y direction across length dz
-    x[len(z_tc) -2 -i] = (x[len(z_tc) -1 -i] + del_x)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
-    y[len(z_tc) -2 -i] = (y[len(z_tc) -1 -i] + del_y)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
-    x1[len(z_tc) -2 -i] = (x1[len(z_tc) -1 -i] - del_x)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
-    y1[len(z_tc) -2 -i] = (y1[len(z_tc) -1 -i] - del_y)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
-    #x1[len(z_tc) -2 -i] =  
-    #y1[len(z_tc) -2 -i] = 
     
+    #del_L = (z_tc[len(z_tc) -1 -i] - z_tc[len(z_tc) - 2 - i] )*math.tan(math.radians(helix_angle)) + ((a_c[len(a_c) -2 -i] - a_c[len(a_c) -1 -i])/(2*math.cos(math.radians(helix_angle)))) #circumferential distance covered by spiral at one station
+    del_L = (z_tc[len(z_tc) -1 -i] - z_tc[len(z_tc) - 2 - i] )*math.tan(math.radians(helix_angle))
 
+    #calculation for point P0 (helical generatrix)
+    del_theta_X0 = del_L/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i]) #angle in radians
+    theta_X0 = theta0_X0 + del_theta_X0   #final angle at upstream end of the station
+    del_x0 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i])*(math.cos(theta_X0) - math.cos(theta0_X0))    #displacement in x direction across length dz
+    del_y0 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i])*(math.sin(theta_X0) - math.sin(theta0_X0))    #displacement in y direction across length dz
+    x0[len(z_tc) -2 -i] = (x0[len(z_tc) -1 -i] + del_x0)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i]))
+    y0[len(z_tc) -2 -i] = (y0[len(z_tc) -1 -i] + del_y0)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i]))
 
-print(len(z_tc,), len(r_tc), len(x), len(y))
+    #calculation for point P1
+    theta_X1 = theta_X0 + theta_channel[[len(theta_channel) -2 -i]]/2
+    del_x1 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i])*(math.cos(theta_X1) - math.cos(theta0_X1))    #displacement in x direction across length dz
+    del_y1 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i])*(math.sin(theta_X1) - math.sin(theta0_X1))    #displacement in y direction across length dz
+    x1[len(z_tc) -2 -i] = (x1[len(z_tc) -1 -i] + del_x1)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i]))
+    y1[len(z_tc) -2 -i] = (y1[len(z_tc) -1 -i] + del_y1)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i]))
+
+    #calculation for point P4
+    theta_X4 = theta_X0 - theta_channel[[len(theta_channel) -2 -i]]/2
+    del_x4 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i])*(math.cos(theta_X4) - math.cos(theta0_X4))    #displacement in x direction across length dz
+    del_y4 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i])*(math.sin(theta_X4) - math.sin(theta0_X4))    #displacement in y direction across length dz
+    x4[len(z_tc) -2 -i] = (x4[len(z_tc) -1 -i] + del_x4)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i]))
+    y4[len(z_tc) -2 -i] = (y4[len(z_tc) -1 -i] + del_y4)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i]))
+
+    #calculation for point P2
+    theta_X2 = theta_X0 + theta_channel[[len(theta_channel) -2 -i]]/2
+    del_x2 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i])*(math.cos(theta_X2) - math.cos(theta0_X2))    #displacement in x direction across length dz
+    del_y2 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i])*(math.sin(theta_X2) - math.sin(theta0_X2))    #displacement in y direction across length dz
+    x2[len(z_tc) -2 -i] = (x2[len(z_tc) -1 -i] + del_x2)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i] + h_c[len(h_c) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i]))
+    y2[len(z_tc) -2 -i] = (y2[len(z_tc) -1 -i] + del_y2)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i] + h_c[len(h_c) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i]))
+
+    #calculation for point P3
+    theta_X3 = theta_X0 - theta_channel[[len(theta_channel) -2 -i]]/2
+    del_x3 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i])*(math.cos(theta_X3) - math.cos(theta0_X3))    #displacement in x direction across length dz
+    del_y3 = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i])*(math.sin(theta_X3) - math.sin(theta0_X3))    #displacement in y direction across length dz
+    x3[len(z_tc) -2 -i] = (x3[len(z_tc) -1 -i] + del_x3)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i] + h_c[len(h_c) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i]))
+    y3[len(z_tc) -2 -i] = (y3[len(z_tc) -1 -i] + del_y3)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i] + h_c[len(h_c) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i]))
+
+    #calculation for centroid locus
+    #del_theta_Xc = del_L/(r_tc[len(r_tc) -1 -i] + tin) #angle in radians
+    theta_Xc = theta_X0   #final angle at upstream end of the station
+    del_xc = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i]/2)*(math.cos(theta_Xc) - math.cos(theta0_Xc))    #displacement in x direction across length dz
+    del_yc = (r_tc[len(r_tc) - 1 - i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i]/2)*(math.sin(theta_Xc) - math.sin(theta0_Xc))    #displacement in y direction across length dz
+    xc[len(z_tc) -2 -i] = (xc[len(z_tc) -1 -i] + del_xc)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i] + h_c[len(h_c) -2 -i]/2)/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i]/2))
+    yc[len(z_tc) -2 -i] = (yc[len(z_tc) -1 -i] + del_yc)*((r_tc[len(r_tc) -2 -i] + tin[len(tin) -2 -i] + h_c[len(h_c) -2 -i]/2)/(r_tc[len(r_tc) -1 -i] + tin[len(tin) -1 -i] + h_c[len(h_c) -1 -i]/2))
+
+    
+    theta0_X0 = theta_X0
+    theta0_X1 = theta_X1
+    theta0_X4 = theta_X4
+    theta0_X2 = theta_X2
+    theta0_X3 = theta_X3
+    theta0_Xc = theta_Xc
+    # #calculation for point X1
+    # del_theta_X1 = del_L/(r_tc[len(r_tc) -1 -i] + tin) + theta_channel[len(theta_channel) -1 -i] - theta_channel[len(theta_channel) -2 -i] #angle in radians
+    # theta_X1 = theta0_X1 + del_theta_X1   #final angle at upstream end of the station
+    # del_x1 = (r_tc[len(r_tc) - 1 - i] + tin)*(math.cos(theta_X1) - math.cos(theta0_X1))    #displacement in x direction across length dz
+    # del_y1 = (r_tc[len(r_tc) - 1 - i] + tin)*(math.sin(theta_X1) - math.sin(theta0_X1))    #displacement in y direction across length dz
+    # x1[len(z_tc) -2 -i] = (x1[len(z_tc) -1 -i] + del_x1)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
+    # y1[len(z_tc) -2 -i] = (y1[len(z_tc) -1 -i] + del_y1)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
+    # theta0_X1 = theta_X1
+
+    # #calculation for point X2
+    # #del_L = (z_tc[len(z_tc) -1 -i] - z_tc[len(z_tc) - 2 - i] )*math.tan(math.radians(helix_angle)) #circumferential distance covered by spiral at one station
+    # del_theta_X2 = del_L/(r_tc[len(r_tc) -1 -i] + tin) + theta_channel[len(theta_channel) -1 -i] - theta_channel[len(theta_channel) -2 -i] #angle in radians
+    # theta_X2 = theta0_X2 + del_theta_X2   #final angle at upstream end of the station
+    # del_x2 = (r_tc[len(r_tc) - 1 - i] + tin + h_c[len(r_tc) -1 -i] )*(math.cos(theta_X2) - math.cos(theta0_X2))    #displacement in x direction across length dz
+    # del_y2 = (r_tc[len(r_tc) - 1 - i] + tin + h_c[len(r_tc) -1 -i])*(math.sin(theta_X2) - math.sin(theta0_X2))    #displacement in y direction across length dz
+    # x2[len(z_tc) -2 -i] = (x2[len(z_tc) -1 -i] + del_x2)*((r_tc[len(r_tc) -2 -i] + tin + h_c[len(r_tc) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin + h_c[len(r_tc) -1 -i]))
+    # y2[len(z_tc) -2 -i] = (y2[len(z_tc) -1 -i] + del_y2)*((r_tc[len(r_tc) -2 -i] + tin + h_c[len(r_tc) -2 -i])/(r_tc[len(r_tc) -1 -i] + tin + h_c[len(r_tc) -1 -i]))
+    # theta0_X2 = theta_X2
+
+    # #calculation for point X4
+    # #del_theta_X4 = (del_L + ((a_c[len(a_c) -2 -i] - a_c[len(a_c) -1 -i])/(2*math.cos(math.radians(helix_angle)))))/(r_tc[len(r_tc) -1 -i] + tin) #angle in radians
+    # #del_theta_X4 = (del_L/(r_tc[len(r_tc) -1 -i] + tin)) - (theta_channel[len(theta_channel) -2 -i] - theta_channel[len(theta_channel) -1 -i])/2
+    # del_theta_X4 = del_L/(r_tc[len(r_tc) -1 -i] + tin)  + theta_channel[len(theta_channel) -1 -i] - theta_channel[len(theta_channel) -2 -i] #angle in radians
+    # theta_X4 = theta0_X4 + del_theta_X4   #final angle at upstream end of the station
+    # del_x4 = (r_tc[len(r_tc) - 1 - i] + tin)*(math.cos(theta_X4) - math.cos(theta0_X4))    #displacement in x direction across length dz
+    # del_y4 = (r_tc[len(r_tc) - 1 - i] + tin)*(math.sin(theta_X4) - math.sin(theta0_X4))    #displacement in y direction across length dz
+    # x4[len(z_tc) -2 -i] = (x4[len(z_tc) -1 -i] + del_x4)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
+    # y4[len(z_tc) -2 -i] = (y4[len(z_tc) -1 -i] + del_y4)*((r_tc[len(r_tc) -2 -i] + tin)/(r_tc[len(r_tc) -1 -i] + tin))
+    # theta0_X4 = theta_X4
+
+    results.append([z_tc[len(z_tc) -2 -i], r_tc[len(z_tc) -2 -i], x0[len(z_tc) -2 -i], y0[len(z_tc) -2 -i] , x1[len(z_tc) -2 -i], y1[len(z_tc) -2 -i] , x2[len(z_tc) -2 -i], y2[len(z_tc) -2 -i], x4[len(z_tc) -2 -i], y4[len(z_tc) -2 -i], x3[len(z_tc) -2 -i], y3[len(z_tc) -2 -i], xc[len(z_tc) -2 -i], yc[len(z_tc) -2 -i]] )
+   
+
+print('final angle of spiral generatrix of segment 2 is: ', theta_X0, 'radians', theta0_X0)
+
+output = pd.DataFrame(results, columns=["z(mm)", "r(mm)", "X0(mm)", "Y0(mm)" ,"X1(mm)", "Y1(mm)", "X2(mm)", "Y2(mm)", "X4(mm)", "Y4(mm)", "X3(mm)", "Y3(mm)", "Xc(mm)", "Yc(mm)"])
+output.to_excel('channel_specs_n500_seg2_AM.xlsx', index=False)
+
+#print('max of x is',  max(x1), 'and min of x is', min(x1) )    
+#print('max of y is',  max(y1), 'and min of y is', min(y1) ) 
+
+print(len(z_tc,), len(r_tc), len(x1), len(y1))
+print(len(z_tc,), len(r_tc), len(x2), len(y2))
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
 # Plot the 3D surface
-ax.plot(z_tc, x, y)
-ax.plot(z_tc, x1, y1)
+ax.plot(z_tc, xc, yc, color = 'black')
+ax.plot(z_tc, x1, y1, color = 'red')
+ax.plot(z_tc, x2, y2, color = 'blue')
+ax.plot(z_tc, x4, y4, color = 'yellow')
+ax.plot(z_tc, x3, y3, color = 'green')
+#ax.plot(z_tc, x1, y1)
 ax.plot(z_tc, null, r_tc, color='black')
 ax.plot(z_tc, null, -r_tc, color='black')
 ax.plot(z_tc, r_tc, null, color='black')
@@ -74,40 +235,40 @@ plt.show()
 
 ######################################################spiral channels calculation####################################
 
-aspect_Ratio = np.arange(1, 6, 0.2) #aspect ratio of channels
-Nch = np.arange(10, 105, 5) #number of channels
-AR_exit = np.array([8, 11, 13])  #exit area ratio
+# aspect_Ratio = np.arange(2, 5.5, 0.5) #aspect ratio of channels
+# Nch = np.arange(10, 105, 5) #number of channels
+# AR_exit = np.array([8, 11, 13])  #exit area ratio
 
-b = rib_width_projected
-T_innerWall = tin
-Conv_AR = 5.1
+# b = rib_width_projected
+# T_innerWall = tin
+# Conv_AR = 5.1
 
-results = []
+# results = []
 
-for i in range(len(Nch)):
-    for j in range(len(AR_exit)):
-        angle_rib_channel_universal = (360/Nch[i])*(np.pi/180) ####all calculations in radian only
-        angle_rib_throat = b/(Dt/2 + T_innerWall)   #value in radians
-        angle_rib_exit = b/(((Dt*np.sqrt(AR_exit[j])/2) + T_innerWall))     #value in radians
-        angle_rib_chamber = b/(((Dt*np.sqrt(Conv_AR)/2) + T_innerWall))   #value in radians
-        angle_channel_exit = angle_rib_channel_universal - angle_rib_exit
-        angle_channel_throat = angle_rib_channel_universal - angle_rib_throat
-        angle_channel_chamber = angle_rib_channel_universal - angle_rib_chamber
-        channel_width_chamber = angle_channel_chamber*(((Dt*np.sqrt(Conv_AR)/2) + T_innerWall))*math.cos(helix_angle*np.pi/180)
-        channel_width_throat = angle_channel_throat*(Dt/2 + T_innerWall)*math.cos(helix_angle*np.pi/180)
-        channel_width_exit = angle_channel_exit*(((Dt*np.sqrt(AR_exit[j])/2) + T_innerWall))*math.cos(helix_angle*np.pi/180)
-        for m in range(len(aspect_Ratio)):
-                channel_height_throat = (channel_width_throat*aspect_Ratio[m])
-                channel_height_exit = (channel_width_exit*aspect_Ratio[m])
-                channel_height_chamber = (channel_width_chamber*aspect_Ratio[m])
-                if (1<channel_height_throat<7.5):
-                    if (1<channel_height_chamber<9.5):
-                        if (1<channel_height_exit<9.5):
-                            results.append([Nch[i], b, channel_width_throat, channel_height_throat, channel_height_throat/channel_width_throat, channel_width_chamber, channel_height_chamber, channel_height_chamber/channel_width_chamber, channel_width_exit, channel_height_exit, channel_height_exit/channel_width_exit, AR_exit[j]])
-                            angle_rib_throat = angle_rib_exit = angle_rib_chamber = angle_channel_throat = angle_channel_chamber = angle_channel_exit = channel_width_chamber = channel_width_throat = channel_width_exit = channel_height_chamber = channel_height_throat = channel_height_exit = 0
+# for i in range(len(Nch)):
+#     for j in range(len(AR_exit)):
+#         angle_rib_channel_universal = (360/Nch[i])*(np.pi/180) ####all calculations in radian only
+#         angle_rib_throat = b/(Dt/2 + T_innerWall)   #value in radians
+#         angle_rib_exit = b/(((Dt*np.sqrt(AR_exit[j])/2) + T_innerWall))     #value in radians
+#         angle_rib_chamber = b/(((Dt*np.sqrt(Conv_AR)/2) + T_innerWall))   #value in radians
+#         angle_channel_exit = angle_rib_channel_universal - angle_rib_exit
+#         angle_channel_throat = angle_rib_channel_universal - angle_rib_throat
+#         angle_channel_chamber = angle_rib_channel_universal - angle_rib_chamber
+#         channel_width_chamber = angle_channel_chamber*(((Dt*np.sqrt(Conv_AR)/2) + T_innerWall))*math.cos(helix_angle*np.pi/180)
+#         channel_width_throat = angle_channel_throat*(Dt/2 + T_innerWall)*math.cos(helix_angle*np.pi/180)
+#         channel_width_exit = angle_channel_exit*(((Dt*np.sqrt(AR_exit[j])/2) + T_innerWall))*math.cos(helix_angle*np.pi/180)
+#         for m in range(len(aspect_Ratio)):
+#                 channel_height_throat = (channel_width_throat*aspect_Ratio[m]*math.cos(helix_angle*np.pi/180))
+#                 channel_height_exit = (channel_width_exit*aspect_Ratio[m]*math.cos(helix_angle*np.pi/180))
+#                 channel_height_chamber = (channel_width_chamber*aspect_Ratio[m]*math.cos(helix_angle*np.pi/180))
+#                 if (1<channel_height_throat<5.5):
+#                     if (1<channel_height_chamber<6.5):
+#                         if (1<channel_height_exit<6.5):
+#                             results.append([Nch[i], b, channel_width_throat, channel_height_throat, channel_height_throat/(channel_width_throat*math.cos(helix_angle*np.pi/180)), channel_width_chamber, channel_height_chamber, channel_height_chamber/(channel_width_chamber*math.cos(helix_angle*np.pi/180)), channel_width_exit, channel_height_exit, channel_height_exit/(channel_width_exit*math.cos(helix_angle*np.pi/180)), AR_exit[j]])
+#                             angle_rib_throat = angle_rib_exit = angle_rib_chamber = angle_channel_throat = angle_channel_chamber = angle_channel_exit = channel_width_chamber = channel_width_throat = channel_width_exit = channel_height_chamber = channel_height_throat = channel_height_exit = 0
 
 
 
-out = pd.DataFrame(results, columns=['number of channels', 'rib width', 'channel width at throat', 'channel height at throat', 'channel aspect ratio at throat', 'channel width at chamber', 'channel height at chamber', 'channel aspect ratio at chamber', 'channel width at exit', 'channel height at exit', 'channel aspect ratio at exit', 'exit area ratio'])
+# out = pd.DataFrame(results, columns=['number of channels', 'rib width', 'projected channel width at throat', 'channel height at throat', 'channel aspect ratio at throat', 'projected channel width at chamber', 'channel height at chamber', 'channel aspect ratio at chamber', 'projected channel width at exit', 'channel height at exit', 'channel aspect ratio at exit', 'exit area ratio'])
                             
-out.to_csv('Raman2_TC-R2_spiralChannels.csv', index=False)
+# out.to_csv('Raman2_TC-R2_spiralChannels.csv', index=False)
